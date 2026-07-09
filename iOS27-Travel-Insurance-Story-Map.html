@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>iOS 27 Travel Insurance — Story Map (Draft)</title>
+<style>
+  :root {
+    --ink: #111827;
+    --muted: #6B7280;
+    --rule: #E5E7EB;
+    --user-bg: #FEF3C7;
+    --user-accent: #78350F;
+    --ios-bg: #DBEAFE;
+    --ios-accent: #1E40AF;
+    --app-bg: #FCE7F3;
+    --app-accent: #9F1239;
+    --ctrl-bg: #E9D5FF;
+    --ctrl-accent: #6B21A8;
+    --highlight-bg: #FEE2E2;
+    --highlight-accent: #991B1B;
+    --tbc-bg: #FEF9C3;
+    --tbc-accent: #713F12;
+    --idle-bg: #F3F4F6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 40px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+    background: #F9FAFB;
+  }
+  header {
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule);
+  }
+  h1 {
+    margin: 0 0 4px 0;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .subtitle {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .status-tag {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 3px 10px;
+    background: var(--tbc-bg);
+    color: var(--tbc-accent);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 3px;
+  }
+  .anchor-banner {
+    margin: 14px 0 20px 0;
+    padding: 12px 16px;
+    background: linear-gradient(90deg, var(--highlight-bg) 0%, #ffffff 100%);
+    border-left: 4px solid var(--highlight-accent);
+    border-radius: 4px;
+  }
+  .anchor-banner strong {
+    color: var(--highlight-accent);
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .anchor-banner p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .map {
+    display: grid;
+    grid-template-columns: 150px repeat(6, 1fr);
+    gap: 5px;
+  }
+  .col-header {
+    padding: 10px 8px;
+    text-align: center;
+    background: var(--ink);
+    color: #ffffff;
+    border-radius: 8px 8px 4px 4px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .row-label {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 10px 12px;
+    background: #ffffff;
+    border-left: 4px solid var(--ink);
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .row-label small {
+    display: block;
+    font-weight: 400;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .row-label.user { border-left-color: var(--user-accent); }
+  .row-label.ios { border-left-color: var(--ios-accent); color: var(--ios-accent); }
+  .row-label.app { border-left-color: var(--app-accent); color: var(--app-accent); }
+  .row-label.ctrl { border-left-color: var(--ctrl-accent); color: var(--ctrl-accent); }
+  .cell {
+    padding: 10px 11px;
+    border-radius: 6px;
+    font-size: 11px;
+    line-height: 1.4;
+    min-height: 90px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    position: relative;
+  }
+  .cell.user { background: var(--user-bg); color: var(--user-accent); border: 1px solid rgba(120,53,15,0.15); }
+  .cell.ios { background: var(--ios-bg); color: var(--ios-accent); }
+  .cell.app { background: var(--app-bg); color: var(--app-accent); }
+  .cell.ctrl { background: var(--ctrl-bg); color: var(--ctrl-accent); }
+  .cell.idle {
+    background: var(--idle-bg);
+    color: #9CA3AF;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+  }
+  .cell strong { display: block; margin-bottom: 3px; font-weight: 700; }
+  .cell ul { margin: 0; padding-left: 13px; }
+  .cell li { margin-bottom: 2px; }
+  .tbc {
+    display: inline-block;
+    padding: 1px 6px;
+    background: var(--tbc-bg);
+    color: var(--tbc-accent);
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-right: 4px;
+  }
+  .no-app {
+    display: inline-block;
+    font-size: 9px;
+    padding: 1px 5px;
+    background: var(--highlight-accent);
+    color: #ffffff;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-top: 3px;
+    font-weight: 700;
+  }
+  .quote-preview {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 3px;
+    margin-top: 4px;
+    padding: 4px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 3px;
+  }
+  .quote-tier {
+    text-align: center;
+    padding: 3px 2px;
+    background: #ffffff;
+    border-radius: 2px;
+    font-size: 9px;
+    line-height: 1.15;
+  }
+  .quote-tier.recommended {
+    background: var(--app-accent);
+    color: #ffffff;
+    font-weight: 700;
+  }
+  .quote-tier .price {
+    display: block;
+    font-weight: 700;
+    font-size: 10px;
+    margin-top: 1px;
+  }
+  .anchors {
+    margin-top: 22px;
+    padding: 14px 18px;
+    background: #ffffff;
+    border-radius: 8px;
+    border-left: 4px solid var(--highlight-accent);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .anchors h3 {
+    margin: 0 0 8px 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--highlight-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .anchors ol {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .anchors li { margin-bottom: 4px; }
+  .legend {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .legend-item {
+    padding: 10px 12px;
+    background: #ffffff;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .legend-item h3 {
+    margin: 0 0 4px 0;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .legend-item p {
+    margin: 0;
+    font-size: 10.5px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+  .legend-item.user h3 { color: var(--user-accent); }
+  .legend-item.ios h3 { color: var(--ios-accent); }
+  .legend-item.app h3 { color: var(--app-accent); }
+  .legend-item.ctrl h3 { color: var(--ctrl-accent); }
+  .open-questions {
+    margin-top: 22px;
+    padding: 14px 18px;
+    background: var(--tbc-bg);
+    border-radius: 8px;
+    border-left: 4px solid var(--tbc-accent);
+  }
+  .open-questions h3 {
+    margin: 0 0 8px 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--tbc-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .open-questions ul {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 11.5px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .open-questions li { margin-bottom: 3px; }
+  .scope-band {
+    margin-top: 22px;
+    padding: 12px 16px;
+    background: #F0FDF4;
+    border-radius: 6px;
+    border-left: 4px solid #15803D;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .scope-band strong {
+    color: #15803D;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .scope-band span {
+    font-size: 12px;
+    color: var(--ink);
+  }
+  footer {
+    margin-top: 28px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>iOS 27 Travel Insurance — Story Map</h1>
+  <p class="subtitle">Innovare × A&amp;M · Anchor use case for Joel's HK client + HSBC orals · 9 July 2026</p>
+  <span class="status-tag">Draft — pending Vu &amp; Jath fortification</span>
+</header>
+
+<div class="anchor-banner">
+  <strong>The single anchor moment</strong>
+  <p>User views a flight confirmation email in Mail, invokes Siri, buys travel insurance — <strong>without opening any app</strong>. Entire journey stays in the Siri overlay from invocation to success. Joel's core demand: pure Siri capability, zero app open.</p>
+</div>
+
+<div class="map">
+  <div></div>
+  <div class="col-header"><span class="step-number">1</span>Reading flight email</div>
+  <div class="col-header"><span class="step-number">2</span>Invoke Siri</div>
+  <div class="col-header"><span class="step-number">3</span>Intent runs headless</div>
+  <div class="col-header"><span class="step-number">4</span>Quote card in Siri</div>
+  <div class="col-header"><span class="step-number">5</span>Select + confirm</div>
+  <div class="col-header"><span class="step-number">6</span>Success in Siri</div>
+
+  <div class="row-label user">User Actions<small>what the customer experiences</small></div>
+  <div class="cell user">Reading a flight confirmation email in the Mail app. No new behaviour required.</div>
+  <div class="cell user">Says: <em>"Hey Siri, buy travel insurance for this flight."</em></div>
+  <div class="cell user">Waiting. Siri overlay shows <em>"Getting quotes..."</em> progress. <span class="no-app">No app open</span></div>
+  <div class="cell user">Sees 3-tier offer card overlaid on Mail; Siri narrates key benefits.
+    <div class="quote-preview">
+      <div class="quote-tier">Standard<span class="price">HKD 468</span></div>
+      <div class="quote-tier recommended">Elite<span class="price">HKD 562</span></div>
+      <div class="quote-tier">Family<span class="price">HKD 702</span></div>
+    </div>
+  </div>
+  <div class="cell user">Selects Elite (tap or voice); Face ID confirms purchase. <span class="tbc">Vu: TBC</span> voice vs tap primary</div>
+  <div class="cell user">Sees / hears: <em>"Your Elite travel insurance is confirmed for your Bali trip."</em> Success card in Siri. <span class="no-app">No app open</span></div>
+
+  <div class="row-label ios">iOS 27 / Apple Intelligence<small>what Apple contributes</small></div>
+  <div class="cell ios">On-screen awareness registers email content as available Siri context.</div>
+  <div class="cell ios">
+    <ul>
+      <li>Apple Intelligence parses phrase</li>
+      <li>Interaction Donation routes to Travel Insurance Intent</li>
+      <li>Flight details extracted from email <em>(hardcoded for demo)</em></li>
+    </ul>
+  </div>
+  <div class="cell ios">Dispatches Intent to Travel Insurance app in <strong>headless sandbox</strong>. Live Activity shows progress.</div>
+  <div class="cell ios">Renders structured Quote entities as Siri card + voice narration. <span class="tbc">Vu: TBC</span> 3-tier vs recommended-only</div>
+  <div class="cell ios">Handles selection input (voice or tap); dispatches PurchaseTravelInsurance Intent.</div>
+  <div class="cell ios">Renders success card + voice confirmation via Siri surface / Live Activity.</div>
+
+  <div class="row-label app">Travel App + SPARK<small>what Innovare + A&amp;M contribute</small></div>
+  <div class="cell app idle">idle</div>
+  <div class="cell app idle">idle</div>
+  <div class="cell app">
+    <ul>
+      <li>Intent handler runs headless</li>
+      <li>Calls Coherent <strong>SPARK API</strong> endpoint directly (Intent handler acts as the wrapper)</li>
+      <li>SPARK rules engine returns 3-tier Quote entities</li>
+      <li><span class="tbc">Vu: TBC</span> Spark endpoint URL + auth model</li>
+    </ul>
+  </div>
+  <div class="cell app idle">idle</div>
+  <div class="cell app">
+    <ul>
+      <li>PurchaseTravelInsurance Intent runs headless</li>
+      <li>Payment stub returns success (mirrors previous banking demo pattern)</li>
+      <li>Policy record written (mocked)</li>
+    </ul>
+  </div>
+  <div class="cell app">Audit log entry captures the full transaction. <span class="no-app">App never opens</span></div>
+
+  <div class="row-label ctrl">Control Plane<small>governance layer</small></div>
+  <div class="cell ctrl idle">idle</div>
+  <div class="cell ctrl">Voice ID confirms speaker (Apple personalisation).</div>
+  <div class="cell ctrl">Session validation; guardrails check on returned quote structure.</div>
+  <div class="cell ctrl">Consent check before offering actionable purchase.</div>
+  <div class="cell ctrl">Biometric (Face ID) authenticates purchase. <span class="tbc">Vu: TBC</span> biometric timing</div>
+  <div class="cell ctrl">Audit log captures invocation → analysis → selection → confirmation → success.</div>
+</div>
+
+<div class="scope-band">
+  <div><strong>Effort commitment</strong> &nbsp;&nbsp; <span>4 days Jath (dev) · 0.5 day Vu (architecture) · 0.5 day Aaron (coordination) &nbsp;·&nbsp; <b>~USD $3,500 all-in</b> &nbsp;·&nbsp; ~1 week wall time</span></div>
+</div>
+
+<div class="anchors">
+  <h3>Three anchor moments to hit</h3>
+  <ol>
+    <li><strong>Steps 3–4:</strong> Travel app does real work — calls Coherent SPARK, returns real quote data — <strong>without opening</strong>. The iOS 27 differentiator, and Joel's core "beyond the app" moment.</li>
+    <li><strong>Step 4:</strong> Siri narrates while showing the card. Multimodal (voice + visual + tap or voice selection) — the antidote to Joel's "not chatbot style" ask.</li>
+    <li><strong>Step 6:</strong> Success stays in Siri. The app never opens at any point in the journey. Pure iOS 27 capability, deliberate demo choice.</li>
+  </ol>
+</div>
+
+<div class="legend">
+  <div class="legend-item user">
+    <h3>User Actions</h3>
+    <p>What the customer experiences. Mail app in the background; Siri overlay drives the whole journey.</p>
+  </div>
+  <div class="legend-item ios">
+    <h3>iOS 27 / Apple Intelligence</h3>
+    <p>On-screen awareness, Foundation Models, Intent dispatching, Live Activity / Siri card rendering. Apple doesn't see travel or bank data.</p>
+  </div>
+  <div class="legend-item app">
+    <h3>Travel App + Coherent SPARK</h3>
+    <p>Native iOS app registers Intents. Handlers call Coherent SPARK API directly for quotes. No MCP layer needed for the demo. No new backend build. Real API, mocked payment.</p>
+  </div>
+  <div class="legend-item ctrl">
+    <h3>Control Plane</h3>
+    <p>Voice ID, session validation, biometric confirmation, audit trail. Same governance rails as any existing banking/insurance app.</p>
+  </div>
+</div>
+
+<div class="open-questions">
+  <h3>Open decisions (Vu &amp; Jath to fortify)</h3>
+  <ul>
+    <li><strong>Spark backend:</strong> exact Spark API endpoint URL and iOS-side auth model (Vu confirmed direct Spark call, no MCP layer for demo)</li>
+    <li><strong>Email input:</strong> real airline confirmation format, or a canned demo email</li>
+    <li><strong>Quote card design:</strong> reuse existing 3-tier Spark look, or simplified overlay</li>
+    <li><strong>Multi-tier presentation:</strong> all 3 tiers in the card, or Elite only with "see other options"</li>
+    <li><strong>Confirmation timing:</strong> biometric before quote reveal, before purchase, or both; voice vs tap primary</li>
+    <li><strong>Branding:</strong> HSBC-fixed (matches existing Spark page), generic A&amp;M, or config-swappable for HK client demo vs HSBC orals</li>
+    <li><strong>Demo email seeding:</strong> canned email via Gmail, or hardcoded test email in demo mode (Jath's call)</li>
+  </ul>
+</div>
+
+<footer>
+  Innovare Consulting Group · Confidential — internal draft, pre-A&amp;M share · 9 July 2026
+</footer>
+
+</body>
+</html>
