@@ -94,6 +94,9 @@ struct BuyTravelInsuranceIntent: AppIntent {
         } catch let error as LAError where error.code == .userCancel {
             auditLog.record(.biometricAuth, detail: "Face ID cancelled by user — purchase aborted")
             throw BuyTravelInsuranceError.biometricFailed
+        } catch let error as LAError where error.code == .authenticationFailed || error.code == .biometryLockout {
+            auditLog.record(.biometricAuth, detail: "Face ID failed to authenticate — purchase aborted")
+            throw BuyTravelInsuranceError.biometricFailed
         } catch let error as BuyTravelInsuranceError {
             throw error
         } catch {

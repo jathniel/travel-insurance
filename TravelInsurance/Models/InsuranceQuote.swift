@@ -10,7 +10,7 @@ struct InsuranceQuote: Codable, Hashable, Identifiable, Sendable {
     var benefits: [String]
     var isRecommended: Bool
 
-    /// Price formatted for display, e.g. "HKD 562.00".
+    /// Price formatted for display, e.g. "HKD 562".
     var formattedPrice: String {
         price.formatted(.currency(code: currencyCode).presentation(.isoCode).precision(.fractionLength(0)))
     }

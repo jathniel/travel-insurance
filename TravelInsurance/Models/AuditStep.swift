@@ -6,8 +6,8 @@ enum AuditStep: String, Codable, CaseIterable, Sendable {
     case sessionValidation
     case quoteReturned
     case guardrailCheck
-    case consentCheck
     case tierSelected
+    case consentCheck
     case biometricAuth
     case paymentProcessed
     case policyIssued
