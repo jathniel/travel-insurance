@@ -57,7 +57,7 @@ struct SuccessSnippetView: View {
 #Preview {
     SuccessSnippetView(
         policy: .issued(
-            for: MockSparkQuoteService.cannedQuotes[1],
+            for: QuoteTierCatalog.baseTiers[1],
             flight: .demo,
             paymentReference: "PAY-DEMO123"
         )

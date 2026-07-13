@@ -64,3 +64,9 @@ fastlane/test_output
 .claude
 skills-lock.json
 context-insurance-travel.md
+context.md
+
+# SPARK credentials — never commit
+TravelInsurance/Services/SparkSecrets.swift
+sparkapi.txt
+

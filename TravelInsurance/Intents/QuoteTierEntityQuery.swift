@@ -1,17 +1,18 @@
 import AppIntents
 
-/// Resolves tier identifiers against the deterministic mocked quote set,
-/// so Siri can rehydrate a selected tier without a network round trip.
+/// Resolves tier identifiers against the most recently fetched quotes, so a
+/// rehydrated tier carries its live SPARK price. Falls back to the catalog's
+/// canned tiers before any fetch has happened.
 struct QuoteTierEntityQuery: EntityQuery {
     @MainActor
     func entities(for identifiers: [String]) async throws -> [QuoteTierEntity] {
-        MockSparkQuoteService.cannedQuotes
+        QuoteRepository.shared.latestQuotes
             .filter { identifiers.contains($0.id) }
             .map(QuoteTierEntity.init)
     }
 
     @MainActor
     func suggestedEntities() async throws -> [QuoteTierEntity] {
-        MockSparkQuoteService.cannedQuotes.map(QuoteTierEntity.init)
+        QuoteRepository.shared.latestQuotes.map(QuoteTierEntity.init)
     }
 }

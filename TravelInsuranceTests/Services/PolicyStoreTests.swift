@@ -6,7 +6,7 @@ struct PolicyStoreTests {
     private let fileURL = URL.temporaryDirectory.appending(path: "policies-\(UUID().uuidString).json")
 
     private func makePolicy(paymentReference: String = "PAY-TEST1234") -> Policy {
-        .issued(for: MockSparkQuoteService.cannedQuotes[0], flight: .demo, paymentReference: paymentReference)
+        .issued(for: QuoteTierCatalog.baseTiers[0], flight: .demo, paymentReference: paymentReference)
     }
 
     private func removeStoreFile() {

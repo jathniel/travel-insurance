@@ -4,7 +4,7 @@ import Testing
 
 struct PolicyTests {
     private var quote: InsuranceQuote {
-        MockSparkQuoteService.cannedQuotes[0]
+        QuoteTierCatalog.baseTiers[0]
     }
 
     @Test func issuedPolicyNumberHasBrandedPrefixAndSuffix() {

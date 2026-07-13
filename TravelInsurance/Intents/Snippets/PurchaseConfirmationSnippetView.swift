@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Compact purchase summary shown in the Siri confirmation prompt,
-/// just before Face ID — the "consent" beat of the journey.
+/// just before the mocked payment — the "consent" beat of the journey.
 struct PurchaseConfirmationSnippetView: View {
     var quote: InsuranceQuote
     var flight: FlightDetails
@@ -71,7 +71,7 @@ struct PurchaseConfirmationSnippetView: View {
 
 #Preview {
     PurchaseConfirmationSnippetView(
-        quote: MockSparkQuoteService.cannedQuotes[1],
+        quote: QuoteTierCatalog.baseTiers[1],
         flight: .demo
     )
 }

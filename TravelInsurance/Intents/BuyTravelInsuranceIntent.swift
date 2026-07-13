@@ -1,15 +1,23 @@
 import AppIntents
 import LocalAuthentication
 import SwiftUI
+import UIKit
 
-/// The entire demo journey in one headless intent: quote → 3-tier selection →
-/// consent confirmation → Face ID → mocked purchase → success card. The app UI
-/// never comes to the foreground at any point.
+/// The demo journey in one intent: quote → 3-tier selection → consent
+/// confirmation → Face ID → mocked purchase → success card.
+///
+/// iOS forbids a headless intent from presenting its own Face ID sheet
+/// (LAContext fails with `notInteractive` while the app is backgrounded under
+/// Siri), so the intent runs headless through quoting and confirmation, then
+/// briefly transitions the app to the foreground — just long enough for the
+/// real Face ID sheet — before completing the purchase.
 struct BuyTravelInsuranceIntent: AppIntent {
     static let title: LocalizedStringResource = "Buy Travel Insurance"
     static let description = IntentDescription(
         "Get quotes and buy travel insurance for your upcoming flight, entirely within Siri."
     )
+    static let authenticationPolicy: IntentAuthenticationPolicy = .requiresLocalDeviceAuthentication
+    static let supportedModes: IntentModes = [.background, .foreground(.dynamic)]
 
     @Parameter(title: "Plan")
     var tier: QuoteTierEntity?
@@ -23,8 +31,15 @@ struct BuyTravelInsuranceIntent: AppIntent {
         auditLog.record(.invocation, detail: "Siri intent invoked for \(flight.airline) \(flight.flightNumber) to \(flight.destinationDisplayName)")
         auditLog.record(.sessionValidation, detail: "Voice ID confirmed speaker; session validated (mocked)")
 
-        let quotes = try await MockSparkQuoteService().fetchQuotes(for: flight)
-        auditLog.record(.quoteReturned, detail: "SPARK returned \(quotes.count) tiers for \(flight.tripDurationDays)-day trip (mocked)")
+        let quotes: [InsuranceQuote]
+        do {
+            quotes = try await SparkQuoteService().fetchQuotes(for: flight)
+        } catch {
+            auditLog.record(.quoteReturned, detail: "Live SPARK quote call failed — journey aborted")
+            throw error
+        }
+        QuoteRepository.shared.latestQuotes = quotes
+        auditLog.record(.quoteReturned, detail: "SPARK returned \(quotes.count) tiers for \(flight.tripDurationDays)-day trip (live)")
         auditLog.record(.guardrailCheck, detail: "Quote structure passed guardrail validation (mocked)")
 
         let selected: QuoteTierEntity
@@ -47,6 +62,12 @@ struct BuyTravelInsuranceIntent: AppIntent {
             }
         )
 
+        // Face ID can't be presented headlessly, so hop to the foreground for
+        // just the biometric beat.
+        try await continueInForeground(
+            IntentDialog("Confirm with Face ID to complete your purchase."),
+            alwaysConfirm: false
+        )
         try await authenticatePurchase(auditLog: auditLog)
 
         let paymentReference = try await MockPaymentService().processPayment(
@@ -58,7 +79,15 @@ struct BuyTravelInsuranceIntent: AppIntent {
         let policy = Policy.issued(for: selected.quote, flight: flight, paymentReference: paymentReference)
         PolicyStore.shared.add(policy)
         auditLog.record(.policyIssued, detail: "Policy \(policy.policyNumber) written locally (mocked)")
-        auditLog.record(.journeyComplete, detail: "Journey completed inside Siri; app never opened")
+        auditLog.record(.journeyComplete, detail: "Journey completed in Siri; app auto-suspended after Face ID")
+
+        // Demo-only: iOS offers no public API to background an app, and the
+        // brief demands the success beat land back on Siri over Mail rather
+        // than in the app. The private "suspend" selector achieves that but
+        // would be rejected by App Review — strip before any store submission.
+        // The short sleep lets the Face ID sheet finish dismissing first.
+        try? await Task.sleep(for: .milliseconds(300))
+        UIApplication.shared.perform(NSSelectorFromString("suspend"))
 
         return .result(
             dialog: IntentDialog("Your \(selected.quote.tierName) travel insurance is confirmed for your \(flight.destinationDisplayName) trip."),
@@ -68,22 +97,23 @@ struct BuyTravelInsuranceIntent: AppIntent {
         )
     }
 
-    /// Face ID as a UX beat. If biometrics can't be presented in this context
-    /// (e.g. fresh simulator), the demo proceeds and the audit trail says so;
-    /// an explicit user cancellation still aborts the purchase.
+    /// Face ID with automatic passcode fallback, run while the app is briefly
+    /// in the foreground. Any failure aborts the purchase — the payment stub
+    /// is never reached without authentication.
     @MainActor
     private func authenticatePurchase(auditLog: AuditLogStore) async throws {
         let context = LAContext()
         var availabilityError: NSError?
 
-        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &availabilityError) else {
-            auditLog.record(.biometricAuth, detail: "Biometrics unavailable — step skipped (demo fallback)")
-            return
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &availabilityError) else {
+            let reason = availabilityError?.localizedDescription ?? "unknown reason"
+            auditLog.record(.biometricAuth, detail: "Authentication unavailable (\(reason)) — purchase aborted")
+            throw BuyTravelInsuranceError.authenticationUnavailable
         }
 
         do {
             let authenticated = try await context.evaluatePolicy(
-                .deviceOwnerAuthenticationWithBiometrics,
+                .deviceOwnerAuthentication,
                 localizedReason: "Confirm your travel insurance purchase"
             )
             guard authenticated else {
@@ -94,13 +124,11 @@ struct BuyTravelInsuranceIntent: AppIntent {
         } catch let error as LAError where error.code == .userCancel {
             auditLog.record(.biometricAuth, detail: "Face ID cancelled by user — purchase aborted")
             throw BuyTravelInsuranceError.biometricFailed
-        } catch let error as LAError where error.code == .authenticationFailed || error.code == .biometryLockout {
-            auditLog.record(.biometricAuth, detail: "Face ID failed to authenticate — purchase aborted")
-            throw BuyTravelInsuranceError.biometricFailed
         } catch let error as BuyTravelInsuranceError {
             throw error
         } catch {
-            auditLog.record(.biometricAuth, detail: "Face ID unavailable in this context — step skipped (demo fallback)")
+            auditLog.record(.biometricAuth, detail: "Authentication error (\(error.localizedDescription)) — purchase aborted")
+            throw BuyTravelInsuranceError.biometricFailed
         }
     }
 }
