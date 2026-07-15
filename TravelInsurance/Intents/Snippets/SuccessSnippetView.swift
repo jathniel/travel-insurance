@@ -1,6 +1,9 @@
 import SwiftUI
 
-/// Success card rendered in Siri at the end of the journey — the app never opens.
+/// The success card for the end of the journey, shown inside
+/// `PurchaseVerificationView` as the in-app success beat. Also returned to
+/// Siri as the result snippet, though Siri doesn't present it after the
+/// app has foregrounded for Face ID.
 struct SuccessSnippetView: View {
     var policy: Policy
 

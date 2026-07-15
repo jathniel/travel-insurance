@@ -1,16 +1,22 @@
 import AppIntents
 import LocalAuthentication
 import SwiftUI
-import UIKit
 
 /// The demo journey in one intent: quote → 3-tier selection → consent
-/// confirmation → Face ID → mocked purchase → success card.
+/// confirmation → Face ID → mocked purchase → in-app success beat.
 ///
 /// iOS forbids a headless intent from presenting its own Face ID sheet
 /// (LAContext fails with `notInteractive` while the app is backgrounded under
 /// Siri), so the intent runs headless through quoting and confirmation, then
-/// briefly transitions the app to the foreground — just long enough for the
-/// real Face ID sheet — before completing the purchase.
+/// transitions the app to the foreground. There it presents a full-screen
+/// verification page (via `PurchaseFlowPresenter`) under the real Face ID
+/// sheet, completes the purchase, and shows a brief in-app success beat that
+/// auto-dismisses to the home screen with the new policy on top.
+///
+/// Note: once the app foregrounds, Siri dismisses its overlay and never
+/// presents the returned result dialog/snippet (confirmed on device) — the
+/// in-app success page is the canonical confirmation. Siri still speaks
+/// error dialogs for failures thrown before the foreground hop.
 struct BuyTravelInsuranceIntent: AppIntent {
     static let title: LocalizedStringResource = "Buy Travel Insurance"
     static let description = IntentDescription(
@@ -63,31 +69,44 @@ struct BuyTravelInsuranceIntent: AppIntent {
         )
 
         // Face ID can't be presented headlessly, so hop to the foreground for
-        // just the biometric beat.
+        // the biometric beat.
         try await continueInForeground(
             IntentDialog("Confirm with Face ID to complete your purchase."),
             alwaysConfirm: false
         )
-        try await authenticatePurchase(auditLog: auditLog)
 
-        let paymentReference = try await MockPaymentService().processPayment(
-            amount: selected.quote.price,
-            currencyCode: selected.quote.currencyCode
-        )
+        let purchaseFlow = PurchaseFlowPresenter.shared
+        purchaseFlow.beginVerification(quote: selected.quote, flight: flight)
+        // Let the verification cover finish presenting before the system
+        // Face ID sheet appears on top of it.
+        try? await Task.sleep(for: .milliseconds(300))
+
+        let paymentReference: String
+        do {
+            try await authenticatePurchase(auditLog: auditLog)
+            paymentReference = try await MockPaymentService().processPayment(
+                amount: selected.quote.price,
+                currencyCode: selected.quote.currencyCode
+            )
+        } catch {
+            // Dismiss the verification page before Siri surfaces the error.
+            purchaseFlow.reset()
+            throw error
+        }
         auditLog.record(.paymentProcessed, detail: "Payment stub succeeded, ref \(paymentReference)")
 
         let policy = Policy.issued(for: selected.quote, flight: flight, paymentReference: paymentReference)
         PolicyStore.shared.add(policy)
         auditLog.record(.policyIssued, detail: "Policy \(policy.policyNumber) written locally (mocked)")
-        auditLog.record(.journeyComplete, detail: "Journey completed in Siri; app auto-suspended after Face ID")
+        auditLog.record(.journeyComplete, detail: "Journey completed; success confirmed in-app after Face ID")
 
-        // Demo-only: iOS offers no public API to background an app, and the
-        // brief demands the success beat land back on Siri over Mail rather
-        // than in the app. The private "suspend" selector achieves that but
-        // would be rejected by App Review — strip before any store submission.
-        // The short sleep lets the Face ID sheet finish dismissing first.
-        try? await Task.sleep(for: .milliseconds(300))
-        UIApplication.shared.perform(NSSelectorFromString("suspend"))
+        // Non-blocking: the page shows the success beat and auto-dismisses to
+        // the home screen with the new policy on top.
+        purchaseFlow.showSuccess(for: policy)
+
+        // Siri won't present this dialog/snippet after the foreground hop
+        // (the overlay is already dismissed), but the result is still returned
+        // for contexts that never foreground and to keep the intent well-formed.
 
         return .result(
             dialog: IntentDialog("Your \(selected.quote.tierName) travel insurance is confirmed for your \(flight.destinationDisplayName) trip."),

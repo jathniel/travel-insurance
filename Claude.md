@@ -2,6 +2,7 @@
 
 This repository contains an Xcode project written with Swift and SwiftUI. Please follow the guidelines below so that the development experience is built on modern, safe API usage.
 
+Always read behavior.md and context.md to get the full view of the application.
 
 ## Role
 
